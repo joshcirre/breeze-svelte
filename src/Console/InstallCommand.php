@@ -21,9 +21,8 @@ class InstallCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'breeze:install {stack : The development stack that should be installed (blade,react,vue,api)}
+    protected $signature = 'breeze:install {stack : The development stack that should be installed (just svelte <3)}
                             {--dark : Indicate that dark mode support should be installed}
-                            {--inertia : Indicate that the Vue Inertia stack should be installed (Deprecated)}
                             {--pest : Indicate that Pest should be installed}
                             {--ssr : Indicates if Inertia SSR support should be installed}
                             {--typescript : Indicates if TypeScript is preferred for the Inertia stack (Experimental)}
@@ -41,7 +40,7 @@ class InstallCommand extends Command
      *
      * @var array<int, string>
      */
-    protected $stacks = ['blade', 'react', 'vue', 'api'];
+    protected $stacks = ['svelte'];
 
     /**
      * Execute the console command.
@@ -50,17 +49,11 @@ class InstallCommand extends Command
      */
     public function handle()
     {
-        if ($this->argument('stack') === 'vue') {
-            return $this->installInertiaVueStack();
-        } elseif ($this->argument('stack') === 'react') {
-            return $this->installInertiaReactStack();
-        } elseif ($this->argument('stack') === 'api') {
-            return $this->installApiStack();
-        } elseif ($this->argument('stack') === 'blade') {
-            return $this->installBladeStack();
+        if ($this->argument('stack') === 'svelte') {
+            return $this->installInertiaSvelteStack();
         }
 
-        $this->components->error('Invalid stack. Supported stacks are [blade], [react], [vue], and [api].');
+        $this->components->error('Invalid stack. This fork just installs the Svelte stack.');
 
         return 1;
     }
@@ -75,7 +68,7 @@ class InstallCommand extends Command
     protected function interact(InputInterface $input, OutputInterface $output)
     {
         if ($this->argument('stack') === null && $this->option('inertia')) {
-            $input->setArgument('stack', 'vue');
+            $input->setArgument('stack', 'svelte');
         }
 
         if ($this->argument('stack')) {
@@ -86,7 +79,7 @@ class InstallCommand extends Command
 
         $input->setOption('dark', $this->components->confirm('Would you like to install dark mode support?'));
 
-        if (in_array($input->getArgument('stack'), ['vue', 'react'])) {
+        if (in_array($input->getArgument('stack'), ['svelte'])) {
             $input->setOption('typescript', $this->components->confirm('Would you like TypeScript support? (Experimental)'));
 
             $input->setOption('ssr', $this->components->confirm('Would you like to install Inertia SSR support?'));
@@ -109,15 +102,15 @@ class InstallCommand extends Command
         if ($this->option('pest')) {
             $this->removeComposerPackages(['phpunit/phpunit'], true);
 
-            if (! $this->requireComposerPackages(['pestphp/pest:^2.0', 'pestphp/pest-plugin-laravel:^2.0'], true)) {
+            if (!$this->requireComposerPackages(['pestphp/pest:^2.0', 'pestphp/pest-plugin-laravel:^2.0'], true)) {
                 return false;
             }
 
-            (new Filesystem)->copyDirectory(__DIR__.'/../../stubs/'.$stubStack.'/pest-tests/Feature', base_path('tests/Feature'));
-            (new Filesystem)->copyDirectory(__DIR__.'/../../stubs/'.$stubStack.'/pest-tests/Unit', base_path('tests/Unit'));
-            (new Filesystem)->copy(__DIR__.'/../../stubs/'.$stubStack.'/pest-tests/Pest.php', base_path('tests/Pest.php'));
+            (new Filesystem)->copyDirectory(__DIR__ . '/../../stubs/' . $stubStack . '/pest-tests/Feature', base_path('tests/Feature'));
+            (new Filesystem)->copyDirectory(__DIR__ . '/../../stubs/' . $stubStack . '/pest-tests/Unit', base_path('tests/Unit'));
+            (new Filesystem)->copy(__DIR__ . '/../../stubs/' . $stubStack . '/pest-tests/Pest.php', base_path('tests/Pest.php'));
         } else {
-            (new Filesystem)->copyDirectory(__DIR__.'/../../stubs/'.$stubStack.'/tests/Feature', base_path('tests/Feature'));
+            (new Filesystem)->copyDirectory(__DIR__ . '/../../stubs/' . $stubStack . '/tests/Feature', base_path('tests/Feature'));
         }
 
         return true;
@@ -138,10 +131,10 @@ class InstallCommand extends Command
         $middlewareGroups = Str::before(Str::after($httpKernel, '$middlewareGroups = ['), '];');
         $middlewareGroup = Str::before(Str::after($middlewareGroups, "'$group' => ["), '],');
 
-        if (! Str::contains($middlewareGroup, $name)) {
+        if (!Str::contains($middlewareGroup, $name)) {
             $modifiedMiddlewareGroup = str_replace(
-                $after.',',
-                $after.','.PHP_EOL.'            '.$name.',',
+                $after . ',',
+                $after . ',' . PHP_EOL . '            ' . $name . ',',
                 $middlewareGroup,
             );
 
@@ -218,7 +211,7 @@ class InstallCommand extends Command
      */
     protected static function updateNodePackages(callable $callback, $dev = true)
     {
-        if (! file_exists(base_path('package.json'))) {
+        if (!file_exists(base_path('package.json'))) {
             return;
         }
 
@@ -235,7 +228,7 @@ class InstallCommand extends Command
 
         file_put_contents(
             base_path('package.json'),
-            json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT).PHP_EOL
+            json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . PHP_EOL
         );
     }
 
@@ -291,12 +284,12 @@ class InstallCommand extends Command
             try {
                 $process->setTty(true);
             } catch (RuntimeException $e) {
-                $this->output->writeln('  <bg=yellow;fg=black> WARN </> '.$e->getMessage().PHP_EOL);
+                $this->output->writeln('  <bg=yellow;fg=black> WARN </> ' . $e->getMessage() . PHP_EOL);
             }
         }
 
         $process->run(function ($type, $line) {
-            $this->output->write('    '.$line);
+            $this->output->write('    ' . $line);
         });
     }
 
